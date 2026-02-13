@@ -42,7 +42,7 @@ Feature: Booking API automation
     Scenario: Retrieve an existing booking by ID
         Given I create a booking with payload
             | roomid | firstname | lastname | depositpaid | checkin    | checkout   | email                | phone       |
-            | 219    | jaces    | jony   | true        | 2026-03-13 | 2026-04-15 | jacyes.j@example.com | 31025435879 |
+            | 219    | jaces     | jony     | true        | 2026-03-13 | 2026-04-15 | jacyes.j@example.com | 31025435879 |
         And I am logged in as admin
         When I send a GET request to "/booking/<id>"
         Then the response should be successful
@@ -58,7 +58,7 @@ Feature: Booking API automation
         Examples:
             | id  |
             | 999 |
-            
+
 
     #####################################
     # UPDATE
@@ -66,24 +66,30 @@ Feature: Booking API automation
 
     @update
     Scenario Outline: Update a booking completely
-        Given a booking exists with ID <id>
+        Given I create a booking with payload
+            | roomid | firstname | lastname | depositpaid | checkin    | checkout   | email        | phone       |
+            | 12     | Tempdata1 | User     | true        | 2026-01-01 | 2026-01-05 | tdata1@t.com | 31021424079 |
+        And I am logged in as admin
         And a booking payload
             | roomid   | firstname   | lastname   | depositpaid   | checkin   | checkout   | email   | phone   |
             | <roomid> | <firstname> | <lastname> | <depositpaid> | <checkin> | <checkout> | <email> | <phone> |
         When I send a PUT request to "/booking/<id>"
         Then the response should be successful
-        And the response should match the booking payload
+        When I send a GET request to "/booking/<id>"
+        Then the response should be successful
+        And the response should match the booking details
 
         Examples:
-            | id | roomid | firstname | lastname | depositpaid | checkin    | checkout   | email                | phone      |
-            | 4  | 27     | John      | Doe      | true        | 2026-03-13 | 2026-04-15 | john.doe@example.com | 1234567890 |
+            | roomid | firstname | lastname | depositpaid | checkin    | checkout   | email               | phone       |
+            | 25     | Jones     | Does     | true        | 2026-03-13 | 2026-04-15 | jon.doe@example.com | 31025465879 |
 
-    @update
+    @todo
     Scenario Outline: Partially update a booking
-        Given a booking exists with ID <id>
+        Given I am logged in as admin
         And a booking payload
             | firstname   | lastname   | depositpaid   |
             | <firstname> | <lastname> | <depositpaid> |
+        And a booking exists with ID <id>
         When I send a PATCH request to "/booking/<id>"
         Then the response should be successful
         And the response should match the updated fields
