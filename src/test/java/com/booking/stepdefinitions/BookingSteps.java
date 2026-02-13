@@ -1,5 +1,8 @@
 package com.booking.stepdefinitions;
 
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.*;
 import io.restassured.RestAssured;
@@ -19,6 +22,12 @@ public class BookingSteps {
     private Map<String, String> bookingPayload;
     private String bookingId;
     private String authToken;
+    private Scenario scenario;
+
+    @Before
+    public void setUp(Scenario scenario) {
+        this.scenario = scenario;
+    }
 
     // ------------------------------
     // CREATE / UPDATE / PATCH payload
@@ -116,6 +125,8 @@ public class BookingSteps {
     @When("I send a POST request to {string}")
     public void sendPostRequest(String endpoint) {
         response = request.when().post(endpoint).then().log().all().extract().response();
+        attachRequestResponse("POST", endpoint,
+        bookingPayload != null ? buildBookingJson(bookingPayload) : null);
     }
 
     @When("I send a GET request to {string}")
@@ -153,6 +164,9 @@ public class BookingSteps {
                     .extract()
                     .response();
         }
+        attachRequestResponse("GET", endpoint,
+        bookingPayload != null ? buildBookingJson(bookingPayload) : null);
+
     }
 
     @When("I send a PUT request to {string}")
@@ -163,7 +177,7 @@ public class BookingSteps {
                 if (bookingId == null) {
                     throw new RuntimeException("Booking ID is null. Cannot perform PUT.");
                 }
-                endpoint = endpoint.replace("<id>", bookingId);                
+                endpoint = endpoint.replace("<id>", bookingId);
             }
 
             if (authToken != null && !authToken.isEmpty()) {
@@ -177,7 +191,7 @@ public class BookingSteps {
                         .then()
                         .log().all()
                         .extract()
-                        .response();                
+                        .response();
             } else {
                 // fallback if no token
                 response = RestAssured.given()
@@ -190,6 +204,9 @@ public class BookingSteps {
                         .extract()
                         .response();
             }
+            attachRequestResponse("PUT", endpoint,
+            bookingPayload != null ? buildBookingJson(bookingPayload) : null);
+
         }
     }
 
@@ -205,13 +222,13 @@ public class BookingSteps {
 
     @When("I send a DELETE request to {string}")
     public void sendDeleteRequest(String endpoint) {
-       if (endpoint.contains("<id>")) {
+        if (endpoint.contains("<id>")) {
 
             if (endpoint.contains("<id>")) {
                 if (bookingId == null) {
-                    throw new RuntimeException("Booking ID is null. Cannot perform PUT.");
+                    throw new RuntimeException("Booking ID is null. Cannot perform DELETE.");
                 }
-                endpoint = endpoint.replace("<id>", bookingId);                
+                endpoint = endpoint.replace("<id>", bookingId);
             }
 
             if (authToken != null && !authToken.isEmpty()) {
@@ -225,7 +242,7 @@ public class BookingSteps {
                         .then()
                         .log().all()
                         .extract()
-                        .response();                
+                        .response();
             } else {
                 // fallback if no token
                 response = RestAssured.given()
@@ -238,7 +255,11 @@ public class BookingSteps {
                         .extract()
                         .response();
             }
+            attachRequestResponse("DELETE", endpoint,
+            bookingPayload != null ? buildBookingJson(bookingPayload) : null);
+
         }
+
     }
 
     // ------------------------------
@@ -357,4 +378,25 @@ public class BookingSteps {
         sb.append("}");
         return sb.toString();
     }
+
+    private void attachRequestResponse(String method, String endpoint, String requestBody) {
+
+        String log = "HTTP Method: " + method +
+            "\nEndpoint: " + endpoint;
+
+        if (requestBody != null) {
+        log += "\nRequest Body:\n" + requestBody;
+        }
+
+        if (response != null) {
+        log += "\n\nStatus Code: " + response.getStatusCode() +
+                "\nResponse Body:\n" + response.getBody().asString();
+        }
+
+        scenario.attach(log, "text/plain", method + " Log");
+    }
+
+
 }
+
+    
