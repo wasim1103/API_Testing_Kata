@@ -85,14 +85,18 @@ Feature: Booking API automation
 
     @todo
     Scenario Outline: Partially update a booking
-        Given I am logged in as admin
+        Given I create a booking with payload
+            | roomid | firstname | lastname | depositpaid | checkin    | checkout   | email        | phone       |
+            | 12     | Tempdata1 | User     | true        | 2026-01-01 | 2026-01-05 | tdata1@t.com | 31021424079 |
+        And I am logged in as admin
         And a booking payload
-            | firstname   | lastname   | depositpaid   |
-            | <firstname> | <lastname> | <depositpaid> |
-        And a booking exists with ID <id>
+            | roomid   | firstname   | lastname   | depositpaid   |
+            | <roomid> | <firstname> | <lastname> | <depositpaid> |
         When I send a PATCH request to "/booking/<id>"
         Then the response should be successful
-        And the response should match the updated fields
+        When I send a GET request to "/booking/<id>"
+        Then the response should be successful
+        And the response should match the booking details
 
         Examples:
             | id | firstname | lastname | depositpaid |
@@ -102,23 +106,25 @@ Feature: Booking API automation
     # DELETE
     #####################################
 
+    #@delete
+    Scenario: Delete an existing booking
+        Given I create a booking with payload
+            | roomid | firstname  | lastname | depositpaid | checkin    | checkout   | email           | phone       |
+            | 19     | Testdata4 | User     | true        | 2026-01-01 | 2026-01-05 | testdata04@t.com | 31021524129 |
+        And I am logged in as admin        
+        When I send a DELETE request to "/booking/<id>"
+        Then the response should be successful
+        When I send a GET request to "/booking/<id>"
+        Then the response should indicate booking not found
+
+
     @delete
-    Scenario Outline: Delete an existing booking
-        Given a booking exists with ID <id>
+    Scenario Outline: Delete a non-existing booking
+        Given I am logged in as admin
         When I send a DELETE request to "/booking/<id>"
         Then the response should be successful
 
         Examples:
-            | id |
-            | 4  |
-            | 5  |
-
-    @delete
-    Scenario Outline: Delete a non-existing booking
-        When I send a DELETE request to "/booking/<id>"
-        Then the response should indicate booking not found
-
-        Examples:
             | id  |
-            | 999 |
-            | 888 |
+            | 10 |
+            

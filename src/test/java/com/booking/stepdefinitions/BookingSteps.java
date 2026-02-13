@@ -205,11 +205,40 @@ public class BookingSteps {
 
     @When("I send a DELETE request to {string}")
     public void sendDeleteRequest(String endpoint) {
-        endpoint = endpoint.replace("<id>", bookingId);
-        response = RestAssured.given().baseUri(RestAssured.baseURI)
-                .header("Content-Type", "application/json")
-                .when().delete(endpoint)
-                .then().log().all().extract().response();
+       if (endpoint.contains("<id>")) {
+
+            if (endpoint.contains("<id>")) {
+                if (bookingId == null) {
+                    throw new RuntimeException("Booking ID is null. Cannot perform PUT.");
+                }
+                endpoint = endpoint.replace("<id>", bookingId);                
+            }
+
+            if (authToken != null && !authToken.isEmpty()) {
+                response = RestAssured.given()
+                        .baseUri(RestAssured.baseURI)
+                        .contentType("application/json")
+                        .header("Cookie", "token=" + authToken)
+                        .body(buildBookingJson(bookingPayload)) // 🔥 THIS WAS MISSING
+                        .when()
+                        .delete(endpoint)
+                        .then()
+                        .log().all()
+                        .extract()
+                        .response();                
+            } else {
+                // fallback if no token
+                response = RestAssured.given()
+                        .baseUri(RestAssured.baseURI)
+                        .header("Content-Type", "application/json")
+                        .when()
+                        .delete(endpoint)
+                        .then()
+                        .log().all()
+                        .extract()
+                        .response();
+            }
+        }
     }
 
     // ------------------------------
